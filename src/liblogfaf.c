@@ -227,13 +227,17 @@ void __syslog_chk(int priority, int flag, const char *format, ...) {
     logmessage(&shared_data, priority, str);
 }
 
-void syslog(int priority, const char *format, ...) {
-    DBG(("liblogfaf: syslog(%d, %s)\n", priority, format));
-    va_list ap;
+void vsyslog(int priority, const char *format, va_list ap) {
+    DBG(("liblogfaf: vsyslog(%d, %s)\n", priority, format));
     char str[MAX_MESSAGE_LEN];
-    va_start(ap, format);
     vsnprintf(str, MAX_MESSAGE_LEN, format, ap);
-    va_end(ap);
     logmessage(&shared_data, priority, str);
 }
 
+void syslog(int priority, const char *format, ...) {
+    DBG(("liblogfaf: syslog(%d, %s)\n", priority, format));
+    va_list ap;
+    va_start(ap, format);
+    vsyslog(priority, format, ap);
+    va_end(ap);
+}
