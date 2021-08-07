@@ -19,7 +19,9 @@
 #include <crt_externs.h>
 #define HOST_NAME_MAX 255
 #else
+#ifndef HOST_NAME_MAX
 #define HOST_NAME_MAX _POSIX_HOST_NAME_MAX
+#endif
 #endif
 
 #define MAX_MESSAGE_LEN 65536
