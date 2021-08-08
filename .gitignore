@@ -2,9 +2,11 @@ Makefile
 Makefile.in
 aclocal.m4
 autom4te.cache/
+bin/
+dist/
+compile
 config.guess
-config.h
-config.h.in
+config.h*
 config.log
 config.status
 config.sub
@@ -22,3 +24,5 @@ src/Makefile.in
 *.lo
 src/logfaf
 stamp-h1
+*.rpm
+*.deb

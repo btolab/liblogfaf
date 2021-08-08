@@ -1,0 +1,20 @@
+---
+name: "liblogfaf"
+arch: "amd64"
+platform: "linux"
+version: "${VERSION}"
+release: "${RELEASE}"
+section: "default"
+priority: "extra"
+maintainer: "NMI <net-ops@nmi.com>"
+description: |
+  liblogfaf (faf stands for fire-and-forget) is a dynamic library that is designed to be LD_PRELOAD-ed while starting a process that uses openlog() & syslog() functions to send syslog messages.
+  It overrides logging functions to make log messages sent as UDP datagrams instead of getting written to /dev/log (which can block). This is useful for processes that call syslog() as part of their main execution flow and can therefore be easily broken when /dev/log buffer gets full, for example when the process that is expected to read from it (usually system syslog daemon like rsyslog or syslog-ng) stops doing that.
+  A highly-available key value store for shared configuration and service
+  discovery. etcd is inspired by zookeeper and doozer, with a focus on
+vendor: "Facebook"
+homepage: "http://github.com/btolab/liblogfaf"
+license: "MIT"
+contents:
+  - src: ./dist/
+    dst: /
