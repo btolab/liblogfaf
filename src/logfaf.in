@@ -1,51 +1,55 @@
-#!/bin/sh
+#!/bin/bash
 
 # Copyright (c) Facebook, Inc. and its affiliates.
 
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-set -e -u
-
-help() {
-    >&2 echo "Usage: ${0##*/} [-h] [-S servername] [-P port] [-B ip] <command>"
-    >&2 echo " -h                show help"
-    >&2 echo " -S servername     set syslog server name (default: localhost)"
-    >&2 echo " -P port           set syslog port (default: 514)"
-    >&2 echo " -B ip             bind to ip (default: no binding)"
-}
-
-while getopts :hS:P:B: OPT; do
-    case ${OPT} in
-        h)
-        help
-        exit 1
-        ;;
-
-        S)
-        export LIBLOGFAF_SERVER=${OPTARG}
-        ;;
-
-        P)
-        export LIBLOGFAF_PORT=${OPTARG}
-        ;;
-
-        B)
-        export LIBLOGFAF_BIND_IP=${OPTARG}
-        ;;
-
-        \?)
-        help
-        exit 1
-        ;;
-    esac
-done
-shift $((OPTIND-1))
-
 PLATFORM=$(uname -s)
 if [ "$PLATFORM" = "Darwin" ]; then
-    DYLD_FORCE_FLAT_NAMESPACE=1 DYLD_INSERT_LIBRARIES="@libdir@/liblogfaf.0.dylib" exec "$@"
+    export DYLD_FORCE_FLAT_NAMESPACE=1 DYLD_INSERT_LIBRARIES="@libdir@/liblogfaf.0.dylib"
 else
-    LIB_PATH="@libdir@/liblogfaf.so"
-    LD_PRELOAD="${LIB_PATH}:${LD_PRELOAD:-}" exec "$@"
+    export LIB_PATH="@libdir@/liblogfaf.so"
+    export LD_PRELOAD="${LIB_PATH}:${LD_PRELOAD:-}"
+fi
+
+if ! [[ "${BASH_SOURCE[0]}" != "${0}" ]] ; then
+    set -e -u
+
+    help() {
+        >&2 echo "Usage: ${0##*/} [-h] [-S servername] [-P port] [-B ip] <command>"
+        >&2 echo " -h                show help"
+        >&2 echo " -S servername     set syslog server name (default: localhost)"
+        >&2 echo " -P port           set syslog port (default: 514)"
+        >&2 echo " -B ip             bind to ip (default: no binding)"
+    }
+
+    while getopts :hS:P:B: OPT; do
+        case ${OPT} in
+            h)
+            help
+            exit 1
+            ;;
+
+            S)
+            export LIBLOGFAF_SERVER=${OPTARG}
+            ;;
+
+            P)
+            export LIBLOGFAF_PORT=${OPTARG}
+            ;;
+
+            B)
+            export LIBLOGFAF_BIND_IP=${OPTARG}
+            ;;
+
+            \?)
+            help
+            exit 1
+            ;;
+        esac
+    done
+    shift $((OPTIND-1))
+
+    exec "$@"
 fi
