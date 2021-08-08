@@ -9,6 +9,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <sys/socket.h>
+#include <sys/syslog.h>
 #include <netdb.h>
 #include <unistd.h>
 #include <time.h>
@@ -64,7 +65,7 @@ static void set_defaults(SharedData *sd) {
     char *slash_ptr = strrchr(sd->progname, '/');
     // If progname contains a slash, extract basename to use it as syslog tag
     sd->syslog_tag = slash_ptr ? slash_ptr + 1 : sd->progname;
-    sd->syslog_facility = 0;
+    sd->syslog_facility = LOG_USER;
 }
 
 static void init_progname(SharedData *sd) {
