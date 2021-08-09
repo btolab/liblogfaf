@@ -9,7 +9,7 @@ PLATFORM=$(uname -s)
 if [ "$PLATFORM" = "Darwin" ]; then
     export DYLD_FORCE_FLAT_NAMESPACE=1 DYLD_INSERT_LIBRARIES="@libdir@/liblogfaf.0.dylib"
 else
-    export LIB_PATH="@libdir@/liblogfaf.so"
+    export LIB_PATH="@libdir@/@dlname@"
     export LD_PRELOAD="${LIB_PATH}:${LD_PRELOAD:-}"
 fi
 

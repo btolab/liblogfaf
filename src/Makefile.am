@@ -16,6 +16,7 @@ dist_noinst_DATA = logfaf.in
 DISTCLEANFILES = logfaf
 
 logfaf:: Makefile $(srcdir)/logfaf.in
+	dlname=`$(SED) -n "s/^dlname='\(.*\)'/\1/p" $(srcdir)/liblogfaf.la` ; \
 	rm -f $(srcdir)/logfaf.tmp $(srcdir)/logfaf && \
-	$(SED) -e 's|@libdir\@|$(libdir)|g' $(srcdir)/logfaf.in > \
+	$(SED) -e "s|@libdir\@|$(libdir)|g ; s|@dlname\@|$$dlname|g" $(srcdir)/logfaf.in > \
 	$(srcdir)/logfaf.tmp && mv $(srcdir)/logfaf.tmp $(srcdir)/logfaf
