@@ -135,8 +135,10 @@ static void init_connection(SharedData *sd) {
                              sd->serveraddr->ai_socktype,
                              sd->serveraddr->ai_protocol)) < 0) {
         perror("liblogfaf: cannot create socket");
+        freeaddrinfo(sd->serveraddr);
         exit(1);
     }
+    freeaddrinfo(sd->serveraddr);
 
     if (bind_ip) {
         gai_error = getaddrinfo(bind_ip, 0,
@@ -150,9 +152,11 @@ static void init_connection(SharedData *sd) {
         }
         if (bind(sd->sockfd, sd->bind_ip->ai_addr, sd->bind_ip->ai_addrlen)) {
             perror("liblogfaf: bind() failed");
+            freeaddrinfo(sd->bind_ip);
             exit(1);
         }
     }
+    freeaddrinfo(sd->bind_ip);
 }
 
 static void logmessage(SharedData *sd, int priority, const char *message) {
@@ -210,7 +214,6 @@ __attribute__((destructor)) static void _liblogfaf_fini(void) {
         fprintf(stderr, "liblogfaf: pthread_mutex_destroy() failed\n");
         exit(1);
     }
-    freeaddrinfo(shared_data.serveraddr);
 }
 
 void openlog(const char *ident, int option, int facility) {
@@ -248,8 +251,8 @@ void closelog(void) {
 void __vsyslog_chk(int priority, int flag, const char *format, va_list ap) {
     DBG(("liblogfaf: __vsyslog_chk(%d, %d, %s)\n",
          priority, flag, format));
-    char str[MAX_MESSAGE_LEN];
-    vsnprintf(str, MAX_MESSAGE_LEN, format, ap);
+    char str[MAX_MESSAGE_LEN-126];
+    vsnprintf(str, MAX_MESSAGE_LEN-126, format, ap);
     logmessage(&shared_data, priority, str);
 }
 
