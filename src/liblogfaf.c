@@ -36,6 +36,7 @@ typedef struct {
     char progname[1024];
 
     int syslog_facility;
+    int syslog_option;
     const char *syslog_tag;
 
     struct addrinfo *serveraddr;
@@ -154,15 +155,20 @@ static void logmessage(SharedData *sd, int priority, const char *message) {
     DBG(("liblogfaf: logmessage(%d, %s)\n", priority, message));
     time_t ts;
     struct tm time_tm;
+    char pid[32];
     char msg[MAX_MESSAGE_LEN];
     ts = time(NULL);
     localtime_r(&ts, &time_tm);
 
-    snprintf(msg, MAX_MESSAGE_LEN, "<%u>%s %2d %02d:%02d:%02d %s %s: %s",
+    if (sd->syslog_option & LOG_PID) {
+        snprintf(pid, 30, "[%d]", getpid());
+    }
+
+    snprintf(msg, MAX_MESSAGE_LEN, "<%u>%s %2d %02d:%02d:%02d %s %s%s: %s",
              priority + sd->syslog_facility * 8,
              months[time_tm.tm_mon], time_tm.tm_mday,
              time_tm.tm_hour, time_tm.tm_min, time_tm.tm_sec,
-             (char *)&sd->hostname, sd->syslog_tag, message);
+             (char *)&sd->hostname, sd->syslog_tag, pid, message);
 
     // We want fire-and-forget, so lack of error checking here is intentional
     sendto(sd->sockfd, msg, strlen(msg), 0,
@@ -197,13 +203,13 @@ void openlog(const char *ident, int option, int facility) {
         exit(1);
     }
     shared_data.syslog_facility = facility;
+    shared_data.syslog_option = option;
     if (ident)
         shared_data.syslog_tag = ident;
     if (pthread_mutex_unlock(&shared_data.lock) != 0) {
         fprintf(stderr, "liblogfaf: pthread_mutex_unlock() failed\n");
         exit(1);
     }
-    // making use of the `option` parameter can be added here if you need it
 }
 
 void closelog(void) {
