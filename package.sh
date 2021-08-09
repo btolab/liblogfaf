@@ -6,13 +6,13 @@ set -o pipefail -o errtrace -o errexit -o nounset -o functrace
 export PROJECT=$(dirname "${PWD}")
 
 git status --porcelain | grep -q . && GIT_STATE=dirty || GIT_STATE=clean
-if ! DESCRIBE=$(git describe --tags --long --dirty 2>/dev/null | sed -r -e 's/^v?// ; s/-/ /g ; s/ 0 / 1 /') ; then
+if ! DESCRIBE=$(git describe --tags --long --dirty 2>/dev/null | sed -r -e 's/^v?// ; s/-/ /g') ; then
     echo >&2 "no tag"; exit 1
 fi
 IFS=' ' read -r -a BUILD <<< "$DESCRIBE"
 
 export VERSION=${BUILD[0]}
-export RELEASE=${BUILD[1]}
+export RELEASE=$((${BUILD[1]}+1))
 if [ 'dirty' = "${GIT_STATE}" ] ; then
     RELEASE=${RELEASE}+${BUILD[2]}
 fi
