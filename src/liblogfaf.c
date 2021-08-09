@@ -36,6 +36,7 @@ static const char *months[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun",
 typedef struct {
     char hostname[HOST_NAME_MAX];
     char progname[1024];
+    const char *override_tag;
 
     int syslog_facility;
     int syslog_option;
@@ -83,6 +84,7 @@ static void init_progname(SharedData *sd) {
         fclose(cmdline);
     }
 #endif
+    sd->override_tag = getenv("LIBLOGFAF_TAG");
 }
 
 static void init_hostname(SharedData *sd) {
@@ -213,8 +215,11 @@ void openlog(const char *ident, int option, int facility) {
     }
     shared_data.syslog_facility = facility;
     shared_data.syslog_option = option;
-    if (ident)
+    if (shared_data.override_tag != NULL) {
+        shared_data.syslog_tag = shared_data.override_tag;
+    } else if (ident) {
         shared_data.syslog_tag = ident;
+    }
     if (pthread_mutex_unlock(&shared_data.lock) != 0) {
         fprintf(stderr, "liblogfaf: pthread_mutex_unlock() failed\n");
         exit(1);
