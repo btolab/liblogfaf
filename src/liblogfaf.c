@@ -175,8 +175,14 @@ static void logmessage(SharedData *sd, int priority, const char *message) {
         snprintf(pid, 30, "[%d]", getpid());
     }
 
+    if (priority & ~(LOG_PRIMASK|LOG_FACMASK))
+        priority &= LOG_PRIMASK|LOG_FACMASK;
+
+    if ((priority & LOG_FACMASK) == 0)
+        priority |= shared_data.syslog_facility;
+
     snprintf(msg, MAX_MESSAGE_LEN, "<%u>%s %2d %02d:%02d:%02d.%03d %s %s%s: %s",
-             priority + sd->syslog_facility * 8,
+             priority,
              months[time_tm.tm_mon], time_tm.tm_mday,
              time_tm.tm_hour, time_tm.tm_min, time_tm.tm_sec, millisec,
              (char *)&sd->hostname, sd->syslog_tag, pid, message);
@@ -239,28 +245,34 @@ void closelog(void) {
     }
 }
 
+void __vsyslog_chk(int priority, int flag, const char *format, va_list ap) {
+    DBG(("liblogfaf: __vsyslog_chk(%d, %d, %s)\n",
+         priority, flag, format));
+    char str[MAX_MESSAGE_LEN];
+    vsnprintf(str, MAX_MESSAGE_LEN, format, ap);
+    logmessage(&shared_data, priority, str);
+}
+
+void __vsyslog(int priority, const char *format, va_list ap) {
+    DBG(("liblogfaf: __vsyslog(%d, %s)\n", priority, format));
+    __vsyslog_chk(priority, -1, format, ap);
+}
+
 void __syslog_chk(int priority, int flag, const char *format, ...) {
     DBG(("liblogfaf: __syslog_chk(%d, %d, %s)\n",
          priority, flag, format));
     va_list ap;
-    char str[MAX_MESSAGE_LEN];
     va_start(ap, format);
-    vsnprintf(str, MAX_MESSAGE_LEN, format, ap);
+    __vsyslog_chk(priority, flag, format, ap);
     va_end(ap);
-    logmessage(&shared_data, priority, str);
 }
 
 void vsyslog(int priority, const char *format, va_list ap) {
     DBG(("liblogfaf: vsyslog(%d, %s)\n", priority, format));
-    char str[MAX_MESSAGE_LEN];
-    vsnprintf(str, MAX_MESSAGE_LEN, format, ap);
-    logmessage(&shared_data, priority, str);
+    __vsyslog_chk(priority, -1, format, ap);
 }
 
 void syslog(int priority, const char *format, ...) {
     DBG(("liblogfaf: syslog(%d, %s)\n", priority, format));
-    va_list ap;
-    va_start(ap, format);
-    vsyslog(priority, format, ap);
-    va_end(ap);
+    __syslog_chk(priority, -1, format);
 }
