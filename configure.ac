@@ -19,6 +19,8 @@ AC_PROG_LIBTOOL
 AC_HEADER_STDC
 AC_C_CONST
 
+AC_CHECK_LIB([m],[lrint])
+
 AC_MSG_CHECKING([build with debug output])
 AC_ARG_ENABLE([debug],
               [AS_HELP_STRING([--enable-debug],

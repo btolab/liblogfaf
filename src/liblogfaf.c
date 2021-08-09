@@ -12,7 +12,9 @@
 #include <sys/syslog.h>
 #include <netdb.h>
 #include <unistd.h>
+#include <sys/time.h>
 #include <time.h>
+#include <math.h>
 #include <limits.h>
 #include <pthread.h>
 
@@ -153,21 +155,28 @@ static void init_connection(SharedData *sd) {
 
 static void logmessage(SharedData *sd, int priority, const char *message) {
     DBG(("liblogfaf: logmessage(%d, %s)\n", priority, message));
-    time_t ts;
     struct tm time_tm;
+    struct timeval tv;
+    int millisec;
     char pid[32];
     char msg[MAX_MESSAGE_LEN];
-    ts = time(NULL);
-    localtime_r(&ts, &time_tm);
+
+    gettimeofday(&tv, NULL);
+    millisec = lrint(tv.tv_usec/1000.0);
+    if (millisec>=1000) {
+        millisec -= 1000;
+        tv.tv_sec++;
+    }
+    localtime_r(&tv.tv_sec, &time_tm);
 
     if (sd->syslog_option & LOG_PID) {
         snprintf(pid, 30, "[%d]", getpid());
     }
 
-    snprintf(msg, MAX_MESSAGE_LEN, "<%u>%s %2d %02d:%02d:%02d %s %s%s: %s",
+    snprintf(msg, MAX_MESSAGE_LEN, "<%u>%s %2d %02d:%02d:%02d.%03d %s %s%s: %s",
              priority + sd->syslog_facility * 8,
              months[time_tm.tm_mon], time_tm.tm_mday,
-             time_tm.tm_hour, time_tm.tm_min, time_tm.tm_sec,
+             time_tm.tm_hour, time_tm.tm_min, time_tm.tm_sec, millisec,
              (char *)&sd->hostname, sd->syslog_tag, pid, message);
 
     // We want fire-and-forget, so lack of error checking here is intentional
